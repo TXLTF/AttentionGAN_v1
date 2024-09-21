@@ -1,0 +1,103 @@
+这个训练脚本的执行顺序和调用其他模块的流程大致如下:
+
+1. 首先导入必要的模块:
+   - `TrainOptions` 从 `options.train_options`
+   - `create_dataset` 从 `data`
+   - `create_model` 从 `models`
+   - `Visualizer` 从 `util.visualizer`
+
+2. 解析训练选项:
+   ```python
+   opt = TrainOptions().parse()
+   ```
+
+3. 创建数据集:
+   ```python
+   dataset = create_dataset(opt)
+   ```
+   这里会根据 `opt.dataset_mode` 选择相应的数据集类。
+
+4. 创建模型:
+   ```python
+   model = create_model(opt)
+   model.setup(opt)
+   ```
+   根据 `opt.model` 选择相应的模型类,并进行初始化设置。
+
+5. 创建可视化器:
+   ```python
+   visualizer = Visualizer(opt)
+   ```
+
+6. 开始训练循环:
+   - 外层循环遍历每个 epoch
+   - 内层循环遍历数据集中的每个批次
+   - 在每次迭代中:
+     - 设置输入数据 (`model.set_input`)
+     - 优化模型参数 (`model.optimize_parameters`)
+     - 定期显示结果、打印损失、保存模型
+
+7. 每个 epoch 结束时更新学习率:
+   ```python
+   model.update_learning_rate()
+   ```
+
+总的来说,这个脚本通过调用其他模块中定义的类和函数来组织整个训练流程,主要涉及数据加载、模型创建和训练、可视化等方面。具体的实现细节会在相应的模块文件中定义。
+
+---------------------------------------------------------------
+
+model主要经历了以下几个关键阶段:
+
+1. 创建:
+```python
+model = create_model(opt)
+```
+这一步会根据`opt.model`参数选择并实例化相应的模型类。
+
+2. 设置:
+```python
+model.setup(opt)
+```
+这一步进行模型的初始化设置,可能包括:
+- 加载网络结构
+- 打印网络信息
+- 创建优化器和学习率调度器
+
+3. 训练循环:
+   a. 设置输入数据:
+   ```python
+   model.set_input(data)
+   ```
+   将数据集中的批次数据传递给模型。
+
+   b. 优化参数:
+   ```python
+   model.optimize_parameters()
+   ```
+   这一步是核心训练过程,包括前向传播、计算损失、反向传播和参数更新。
+
+   c. 计算可视化结果:
+   ```python
+   model.compute_visuals()
+   ```
+   生成用于可视化的输出。
+
+   d. 获取当前损失:
+   ```python
+   losses = model.get_current_losses()
+   ```
+   获取训练过程中的损失值。
+
+4. 保存模型:
+```python
+model.save_networks(save_suffix)
+```
+定期保存模型参数。
+
+5. 更新学习率:
+```python
+model.update_learning_rate()
+```
+在每个epoch结束时调整学习率。
+
+总的来说,model对象封装了整个神经网络模型的核心功能,包括网络结构、前向传播、反向传播、参数优化等。训练脚本通过调用model的各种方法来完成整个训练过程。
